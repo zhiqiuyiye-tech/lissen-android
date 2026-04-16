@@ -129,7 +129,7 @@ android {
 
 dependencies {
   implementation(project(":lib"))
-  
+
   implementation(libs.androidx.navigation.compose)
   implementation(libs.material)
   implementation(libs.material3)
@@ -143,6 +143,7 @@ dependencies {
   implementation(libs.logging.interceptor)
   implementation(libs.okhttp)
   implementation(libs.androidx.browser)
+  implementation(libs.androidx.work.runtime.ktx)
   
   implementation(libs.coil.compose)
   implementation(libs.coil.svg)

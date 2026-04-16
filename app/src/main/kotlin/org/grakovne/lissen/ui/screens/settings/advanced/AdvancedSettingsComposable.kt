@@ -35,12 +35,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import kotlinx.coroutines.launch
 import org.grakovne.lissen.R
 import org.grakovne.lissen.common.restartApplication
 import org.grakovne.lissen.ui.navigation.AppNavigationService
 import org.grakovne.lissen.ui.screens.settings.composable.PlaybackVolumeBoostSettingsComposable
 import org.grakovne.lissen.ui.screens.settings.composable.SettingsToggleItem
+import org.grakovne.lissen.updater.UpdateCheckWorker
 import org.grakovne.lissen.viewmodel.CachingModelView
 import org.grakovne.lissen.viewmodel.SettingsViewModel
 

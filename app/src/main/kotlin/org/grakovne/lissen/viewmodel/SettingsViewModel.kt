@@ -22,6 +22,8 @@ import org.grakovne.lissen.lib.domain.connection.LocalUrl.Companion.clean
 import org.grakovne.lissen.lib.domain.connection.ServerRequestHeader
 import org.grakovne.lissen.lib.domain.connection.ServerRequestHeader.Companion.clean
 import org.grakovne.lissen.persistence.preferences.LissenSharedPreferences
+import org.grakovne.lissen.updater.UpdateRepository
+import org.grakovne.lissen.updater.api.model.UpdateChannel
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,6 +32,7 @@ class SettingsViewModel
   constructor(
     private val mediaChannel: LissenMediaProvider,
     private val preferences: LissenSharedPreferences,
+    private val updateRepository: UpdateRepository,
   ) : ViewModel() {
     private val _host: MutableLiveData<Host> = MutableLiveData(preferences.getHost()?.let { Host.external(it) })
     val host = _host
@@ -93,6 +96,57 @@ class SettingsViewModel
     private val _autoDownloadDelayed = MutableLiveData(preferences.getAutoDownloadDelayed())
     val autoDownloadDelayed = _autoDownloadDelayed
 
+    private val _autoUpdateEnabled = MutableLiveData(preferences.getAutoUpdateEnabled())
+    val autoUpdateEnabled = _autoUpdateEnabled
+
+    private val _updateChannel = MutableLiveData(preferences.getUpdateChannel())
+    val updateChannel = _updateChannel
+
+    sealed class ManualUpdateState {
+      object Idle : ManualUpdateState()
+
+      object Checking : ManualUpdateState()
+
+      object NoUpdate : ManualUpdateState()
+
+      object Error : ManualUpdateState()
+
+      data class UpdateAvailable(
+        val version: String,
+        val url: String,
+        val fileName: String,
+      ) : ManualUpdateState()
+    }
+
+    private val _manualUpdateState = MutableLiveData<ManualUpdateState>(ManualUpdateState.Idle)
+    val manualUpdateState: LiveData<ManualUpdateState> = _manualUpdateState
+
+    fun checkForUpdatesManual() {
+      if (_manualUpdateState.value == ManualUpdateState.Checking) return
+      _manualUpdateState.postValue(ManualUpdateState.Checking)
+      viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        val result = updateRepository.checkUpdate(force = true)
+        if (result.isSuccess) {
+          val release = result.getOrNull()
+          if (release != null) {
+            val apkAsset = release.assets.firstOrNull { it.name.endsWith(".apk") }
+            if (apkAsset != null) {
+              _manualUpdateState.postValue(ManualUpdateState.UpdateAvailable(release.tagName, apkAsset.browserDownloadUrl, apkAsset.name))
+              return@launch
+            }
+          }
+          _manualUpdateState.postValue(ManualUpdateState.NoUpdate)
+        } else {
+          timber.log.Timber.e(result.exceptionOrNull(), "Check for updates failed manually")
+          _manualUpdateState.postValue(ManualUpdateState.Error)
+        }
+      }
+    }
+
+    fun dismissUpdateState() {
+      _manualUpdateState.postValue(ManualUpdateState.Idle)
+    }
+
     fun preferCrashReporting(value: Boolean) {
       _crashReporting.postValue(value)
       preferences.saveAcraEnabled(value)
@@ -106,6 +160,16 @@ class SettingsViewModel
     fun preferAutoDownloadDelayed(value: Boolean) {
       _autoDownloadDelayed.postValue(value)
       preferences.saveAutoDownloadDelayed(value)
+    }
+
+    fun preferAutoUpdateEnabled(value: Boolean) {
+      _autoUpdateEnabled.postValue(value)
+      preferences.saveAutoUpdateEnabled(value)
+    }
+
+    fun preferUpdateChannel(channel: UpdateChannel) {
+      _updateChannel.postValue(channel)
+      preferences.saveUpdateChannel(channel)
     }
 
     fun toggleHideCompleted() {

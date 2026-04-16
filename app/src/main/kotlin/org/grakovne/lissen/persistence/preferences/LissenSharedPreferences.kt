@@ -27,6 +27,7 @@ import org.grakovne.lissen.lib.domain.connection.LocalUrl
 import org.grakovne.lissen.lib.domain.connection.ServerRequestHeader
 import org.grakovne.lissen.lib.domain.makeDownloadOption
 import org.grakovne.lissen.lib.domain.makeId
+import org.grakovne.lissen.updater.api.model.UpdateChannel
 import java.security.KeyStore
 import java.util.UUID
 import javax.crypto.Cipher
@@ -512,6 +513,25 @@ class LissenSharedPreferences
       }
     }
 
+    fun getAutoUpdateEnabled(): Boolean = sharedPreferences.getBoolean(KEY_AUTO_UPDATE_ENABLED, true)
+
+    fun saveAutoUpdateEnabled(enabled: Boolean) {
+      sharedPreferences.edit {
+        putBoolean(KEY_AUTO_UPDATE_ENABLED, enabled)
+      }
+    }
+
+    fun getUpdateChannel(): UpdateChannel =
+      sharedPreferences
+        .getString(KEY_UPDATE_CHANNEL, UpdateChannel.STABLE.name)
+        ?.let { UpdateChannel.valueOf(it) }
+        ?: UpdateChannel.STABLE
+
+    fun saveUpdateChannel(channel: UpdateChannel) =
+      sharedPreferences.edit {
+        putString(KEY_UPDATE_CHANNEL, channel.name)
+      }
+
     companion object {
       private const val KEY_ALIAS = "secure_key_alias"
       private const val KEY_HOST = "host"
@@ -541,6 +561,8 @@ class LissenSharedPreferences
       private const val KEY_PREFERRED_LIBRARY_ORDERING = "preferred_library_ordering"
       private const val KEY_SOFTWARE_CODECS = "software_codecs"
       private const val KEY_HIDE_COMPLETED = "hide_completed"
+      private const val KEY_AUTO_UPDATE_ENABLED = "auto_update_enabled"
+      private const val KEY_UPDATE_CHANNEL = "update_channel"
       private const val KEY_CHAPTER_SKIP_PREFIX = "chapter_skip_"
 
       private const val KEY_CUSTOM_HEADERS = "custom_headers"

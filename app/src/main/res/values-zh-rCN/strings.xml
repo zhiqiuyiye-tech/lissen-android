@@ -188,4 +188,11 @@
     <string name="chapter_skip_set_from_position">从当前位置设置</string>
     <string name="chapter_skip_manual_input">自定义（秒）</string>
     <string name="chapter_skip_disabled">已禁用</string>
+    <string name="settings_screen_auto_update_title">自动更新</string>
+    <string name="settings_screen_auto_update_description">在后台检查更新并自动下载</string>
+    <string name="settings_screen_check_update_title">检查更新</string>
+    <string name="settings_screen_check_update_description">手动检查是否有新版本</string>
+    <string name="settings_screen_update_not_found_toast">已是最新版本。</string>
+    <string name="settings_screen_checking_for_updates_toast">正在检查更新…</string>
+    <string name="settings_screen_update_check_failed_toast">检查更新失败，请检查网络。</string>
 </resources>

@@ -2,6 +2,9 @@ package org.grakovne.lissen
 
 import android.app.Application
 import android.content.Context
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import dagger.hilt.android.HiltAndroidApp
 import org.acra.ACRA
 import org.acra.ReportField
@@ -12,7 +15,9 @@ import org.acra.ktx.initAcra
 import org.acra.security.TLS
 import org.acra.sender.HttpSender
 import org.grakovne.lissen.common.RunningComponent
+import org.grakovne.lissen.updater.UpdateCheckWorker
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -43,6 +48,17 @@ class LissenApplication : Application() {
         Timber.e("Unable to register Running component due to: ${ex.message}")
       }
     }
+
+    scheduleUpdateChecker()
+  }
+
+  private fun scheduleUpdateChecker() {
+    val workRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(12, TimeUnit.HOURS).build()
+    WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+      "UpdateCheckWorker",
+      ExistingPeriodicWorkPolicy.KEEP,
+      workRequest,
+    )
   }
 
   private fun initCrashReporting() {

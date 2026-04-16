@@ -188,4 +188,11 @@
     <string name="chapter_skip_set_from_position">Set from current position</string>
     <string name="chapter_skip_manual_input">Custom (seconds)</string>
     <string name="chapter_skip_disabled">Disabled</string>
+    <string name="settings_screen_auto_update_title">Automatic Updates</string>
+    <string name="settings_screen_auto_update_description">Check for updates and download in the background</string>
+    <string name="settings_screen_check_update_title">Check for Updates</string>
+    <string name="settings_screen_check_update_description">Manually check if a new version is available</string>
+    <string name="settings_screen_update_not_found_toast">You are on the latest version.</string>
+    <string name="settings_screen_checking_for_updates_toast">Checking for updates…</string>
+    <string name="settings_screen_update_check_failed_toast">Check for updates failed. Check your network.</string>
 </resources>

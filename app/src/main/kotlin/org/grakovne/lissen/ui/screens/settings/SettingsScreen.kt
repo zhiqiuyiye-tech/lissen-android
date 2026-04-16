@@ -31,10 +31,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import org.grakovne.lissen.R
 import org.grakovne.lissen.ui.navigation.AppNavigationService
 import org.grakovne.lissen.ui.screens.settings.advanced.AdvancedSettingsNavigationItemComposable
+import org.grakovne.lissen.ui.screens.settings.advanced.AdvancedSettingsSimpleItemComposable
 import org.grakovne.lissen.ui.screens.settings.composable.ColorSchemeSettingsComposable
 import org.grakovne.lissen.ui.screens.settings.composable.GitHubLinkComposable
 import org.grakovne.lissen.ui.screens.settings.composable.LibraryOrderingSettingsComposable
 import org.grakovne.lissen.ui.screens.settings.composable.LicenseFooterComposable
+import org.grakovne.lissen.ui.screens.settings.composable.SettingsToggleItem
 import org.grakovne.lissen.viewmodel.SettingsViewModel
 
 @Composable
@@ -45,6 +47,50 @@ fun SettingsScreen(
 ) {
   val viewModel: SettingsViewModel = hiltViewModel()
   val host by viewModel.host.observeAsState()
+  val autoUpdateEnabled by viewModel.autoUpdateEnabled.observeAsState(true)
+  val context = androidx.compose.ui.platform.LocalContext.current
+  val manualUpdateState by viewModel.manualUpdateState.observeAsState(SettingsViewModel.ManualUpdateState.Idle)
+
+  LaunchedEffect(manualUpdateState) {
+    when (val state = manualUpdateState) {
+      is SettingsViewModel.ManualUpdateState.Checking -> {
+        android.widget.Toast
+          .makeText(
+            context,
+            org.grakovne.lissen.R.string.settings_screen_checking_for_updates_toast,
+            android.widget.Toast.LENGTH_SHORT,
+          ).show()
+      }
+
+      is SettingsViewModel.ManualUpdateState.NoUpdate -> {
+        android.widget.Toast
+          .makeText(
+            context,
+            org.grakovne.lissen.R.string.settings_screen_update_not_found_toast,
+            android.widget.Toast.LENGTH_SHORT,
+          ).show()
+        viewModel.dismissUpdateState()
+      }
+
+      is SettingsViewModel.ManualUpdateState.Error -> {
+        android.widget.Toast
+          .makeText(
+            context,
+            org.grakovne.lissen.R.string.settings_screen_update_check_failed_toast,
+            android.widget.Toast.LENGTH_LONG,
+          ).show()
+        viewModel.dismissUpdateState()
+      }
+
+      is SettingsViewModel.ManualUpdateState.UpdateAvailable -> {
+        org.grakovne.lissen.updater.UpdateNotifier
+          .showUpdateNotification(context, state.version, state.url, state.fileName)
+        viewModel.dismissUpdateState()
+      }
+
+      else -> {}
+    }
+  }
 
   LaunchedEffect(Unit) {
     viewModel.refreshConnectionInfo()
@@ -105,6 +151,20 @@ fun SettingsScreen(
             title = stringResource(R.string.download_settings_title),
             description = stringResource(R.string.download_settings_description),
             onclick = { navController.showCacheSettings() },
+          )
+
+          SettingsToggleItem(
+            title = stringResource(R.string.settings_screen_auto_update_title),
+            description = stringResource(R.string.settings_screen_auto_update_description),
+            initialState = autoUpdateEnabled,
+          ) { viewModel.preferAutoUpdateEnabled(it) }
+
+          AdvancedSettingsSimpleItemComposable(
+            title = stringResource(R.string.settings_screen_check_update_title),
+            description = stringResource(R.string.settings_screen_check_update_description),
+            onclick = {
+              viewModel.checkForUpdatesManual()
+            },
           )
 
           AdvancedSettingsNavigationItemComposable(
